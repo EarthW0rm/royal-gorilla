@@ -1,10 +1,10 @@
 import * as core from "express-serve-static-core";
 import express = require('express');
 
-import RoyalRouter from "../common/RoyalRouter";
+import { RoyalG } from "../common/RoyalG";
 import { HTTP_METHODS } from "../common/Enumerators";
 
-export default class AboutRoute extends RoyalRouter {
+export default class AboutRoute extends RoyalG.Routing.RoyalRouter {
     constructor(_Router: core.Router, _BasePath : string){
         super(_Router, _BasePath);
         super.RegisterRoute( HTTP_METHODS.GET, '/', this.getHomePage);

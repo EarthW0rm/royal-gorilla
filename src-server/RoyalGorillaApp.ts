@@ -15,7 +15,7 @@ RoyalGorillaApp.set('view engine', 'pug');
 RoyalGorillaApp.use(express.static(path.join(__dirname, 'public')));
 
 //route setup.
-RoyalGorillaApp.use('/', routes);
+RoyalGorillaApp.use('/', routes());
 
 // catch 404 and forward to error handler
 RoyalGorillaApp.use(function (req, res, next) {
