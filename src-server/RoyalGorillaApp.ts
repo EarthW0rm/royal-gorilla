@@ -1,6 +1,6 @@
 import express = require('express');
 import path = require('path');
-import routes from './routes/_index';
+import routesInitializer from './routes/_Initializer';
 import RoyalGorillaServer from './RoyalGorillaServer';
 import { RG_API_PORT, RG_NODE_ENV } from './common/Constants';
 
@@ -15,7 +15,7 @@ RoyalGorillaApp.set('view engine', 'pug');
 RoyalGorillaApp.use(express.static(path.join(__dirname, 'public')));
 
 //route setup.
-RoyalGorillaApp.use('/', routes());
+RoyalGorillaApp.use('/', routesInitializer);
 
 // catch 404 and forward to error handler
 RoyalGorillaApp.use(function (req, res, next) {
