@@ -1,12 +1,10 @@
-﻿/*
- * GET home page.
- */
+﻿import express = require('express');
+import RoyalRouterInitializer from "../common/RoyalRouterInitializer";
+import path = require('path');
 
-import express = require('express');
-const router = express.Router();
+const routerInit = new RoyalRouterInitializer();
 
-import IndexRoute from "./IndexRoute";
+const routesDirectoryPath = path.join(__dirname);
+routerInit.RouteRegisterFolder(routesDirectoryPath);
 
-var iRoute = new IndexRoute(router);
-
-export default router;
+export default routerInit.Router;

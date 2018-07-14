@@ -10,5 +10,6 @@
         "**/LICENSE": true,
         "**/*.lock": true,
         "**/node_modules": true,
-    }
+    } ,
+    "typescript.tsdk":"node_modules/typescript/lib/"
 }
