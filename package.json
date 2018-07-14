@@ -1,13 +1,13 @@
 {
   "name": "royal-gorilla",
   "version": "0.0.0",
-  "private": true,
   "scripts": {
     "start": "node app"
   },
+  "license": "AGPL-3.0-or-later",
   "description": "royal-gorilla",
   "author": {
-    "name": "marco"
+    "name": "EarthW0rm"
   },
   "main": "app.js",
   "dependencies": {
