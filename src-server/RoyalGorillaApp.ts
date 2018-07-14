@@ -1,6 +1,6 @@
 import express = require('express');
 import path = require('path');
-import routes from './routes/index';
+import routes from './routes/_index';
 import RoyalGorillaServer from './RoyalGorillaServer';
 import { RG_API_PORT, RG_NODE_ENV } from './common/Constants';
 
