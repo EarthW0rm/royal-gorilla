@@ -3,3 +3,10 @@ export enum HTTP_METHODS {
     POST,
     DELETE,
 }
+
+export enum ENVIROMENTS {
+    Development,
+    Staging,
+    Beta,
+    Production
+}

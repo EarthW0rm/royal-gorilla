@@ -1,8 +1,9 @@
 import express = require('express');
 import path = require('path');
 import routesInitializer from './routes/_Initializer';
-import RoyalGorillaServer from './RoyalGorillaServer';
+import RoyalGorillaServer from './server/RoyalGorillaServer';
 import { RG_API_PORT, RG_NODE_ENV } from './common/Constants';
+import ErrorHandler from './server/middlewares/ErrorHandler';
 
 const RoyalGorillaApp = express();
 
@@ -17,35 +18,8 @@ RoyalGorillaApp.use(express.static(path.join(__dirname, 'public')));
 //route setup.
 RoyalGorillaApp.use('/', routesInitializer);
 
-// catch 404 and forward to error handler
-RoyalGorillaApp.use(function (req, res, next) {
-    var err = new Error('Not Found');
-    err['status'] = 404;
-    next(err);
-});
-
-// error handlers
-// development error handler
-// will print stacktrace
-if (RoyalGorillaApp.get('env') === 'development') {
-    RoyalGorillaApp.use((err: any, req, res, next) => {
-        res.status(err['status'] || 500);
-        res.render('error', {
-            message: err.message,
-            error: err
-        });
-    });
-}
-// production error handler
-// no stacktraces leaked to user
-RoyalGorillaApp.use((err: any, req, res, next) => {
-    res.status(err.status || 500);
-    res.render('error', {
-        message: err.message,
-        error: {}
-    });
-});
-
+RoyalGorillaApp.use(ErrorHandler.Handle_404);
+RoyalGorillaApp.use(ErrorHandler.Handle_500);
 
 RoyalGorillaServer(RoyalGorillaApp);
 
