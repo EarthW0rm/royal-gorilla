@@ -2,14 +2,14 @@
   "name": "royal-gorilla",
   "version": "0.0.0",
   "scripts": {
-    "start": "tsc && node --debug-brk --inspect ./build/app"
+    "start": "tsc && node --debug-brk --inspect ./build/royalgorillaapp.js"
   },
   "license": "AGPL-3.0-or-later",
   "description": "royal-gorilla",
   "author": {
     "name": "EarthW0rm"
   },
-  "main": "app.js",
+  "main": "./build/royalgorillaapp.js",
   "dependencies": {
     "debug": "^2.2.0",
     "express": "^4.14.0",
