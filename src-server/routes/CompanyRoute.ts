@@ -7,10 +7,10 @@ import { HTTP_METHODS } from "../common/Enumerators";
 export default class CompanyRoute extends RoyalRouter {
     constructor(_Router: core.Router, _BasePath : string){
         super(_Router, _BasePath);
-        super.RegisterRoute( HTTP_METHODS.GET, '/', this.getBasicInfo);
+        super.RegisterRoute( HTTP_METHODS.GET, '/', this.getHomePage);
     }
     
-    getBasicInfo(req: express.Request, res: express.Response) {
-        res.send("COMPANY ROUTE");
+    getHomePage(req: express.Request, res: express.Response) {
+        res.render('index', { title: 'Company Home Page' });
     }
 }
