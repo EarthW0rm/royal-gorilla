@@ -10,11 +10,12 @@
     "outDir": "build"
   },
   "include": [
-    "server-src/**/*"
+    "src-server/**/*"
   ],
   "exclude": [
     "node_modules",
     "**/*.spec.ts",
-    "front-src"
+    "front-src",
+    "gulp"
   ]
 }
