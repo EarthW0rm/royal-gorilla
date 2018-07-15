@@ -1,33 +1,23 @@
 const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
-const HtmlWebPackPlugin = require("html-webpack-plugin");
+const buildConfig = require('./build.config');
 
-module.exports = function() {
-
-
+module.exports = function(env){
     return {
-        entry: [
-            'react-hot-loader/patch',
-            'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000&reload=true&quiet=true',
-            './src-front/index.jsx'
-        ] 
-        , mode: 'production'
-        , output:{
-            path: __dirname + '/build/public'
-            , filename: './app.js'
-            , publicPath: 'http://localhost:8080/'
-        }
+        entry: buildConfig.Server.EntryPoint
+        , mode: buildConfig.Build.Mode
+        , output: buildConfig.Build.Output
         , devServer: {
             historyApiFallback: true,
             hot: true,
             inline: true,          
-            host: 'localhost',
-            port: 8080,
+            host: buildConfig.Host,
+            port: buildConfig.DevServer.BrowserSyncPort,
             open: true,
             openPage: '',
             progress: true,
             proxy: {
-                target: 'http://localhost:4000/'
+                target: `http://${buildConfig.Host}:${buildConfig.Server.NodePort}/`
             }
         }
         , devtool: 'eval-source-map'
@@ -97,7 +87,7 @@ module.exports = function() {
                     use: [{
                         loader: 'url-loader',
                         options: { 
-                            limit: 16000, // Convert images < 8kb to base64 strings
+                            limit: 16000,
                             name: 'images/[hash]-[name].[ext]'
                         } 
                     }]
@@ -109,21 +99,7 @@ module.exports = function() {
                 filename: 'app.css'
                 , allChunks: true
             })
-            //, new webpack.optimize.OccurenceOrderPlugin()
             , new webpack.HotModuleReplacementPlugin()
-            // Use NoErrorsPlugin for webpack 1.x
-            // , new webpack.NoEmitOnErrorsPlugin()
-            //, new FaviconsWebpackPlugin('favicon.png')
-            // , new HtmlWebPackPlugin({
-            //     template: "./src/index.html",
-            //     favicon: 'src/AWESOM-O.ico',
-            //     filename: "./index.html"
-            // })
-            // , new webpack.DefinePlugin({
-            //     'process.env': {
-            //         'API_URL': JSON.stringify(env.API_URL)
-            //     }
-            // })
         ]
     }
 };

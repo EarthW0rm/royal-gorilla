@@ -1,3 +1,7 @@
+process.env.NODE_ENV="beta"
+const buildConfig = require('./build.config');
+
+
 const modes = ['development', 'staging', 'production', 'beta'];
 const gulp = require('gulp');
 const rename = require('gulp-rename');
@@ -19,35 +23,35 @@ const appBuildFolder = './build';
 const appStartFile = `${appBuildFolder}/RoyalGorillaApp.js`
 let webpackConfig = require('./webpack.config')();
 const browserSync = require('browser-sync').create();
-process.env.NODE_ENV="development"
 
 
-if(!process.env.NODE_ENV || modes.indexOf(process.env.NODE_ENV.trim()) < 0){
-    throw new Error(`Mode inválido NODE_ENV: ${process.env.NODE_ENV}`);
+
+if(!buildConfig.ModeIsValid()){
+    throw new Error(`Mode inválido NODE_ENV: ${buildConfig.NodeEnv}`);
 } else {
-    if(process.env.NODE_ENV == 'development'){
+    if(buildConfig.IsDevelopment()){
         easter.Logo();
         log.title('\\m/');
     }
-    log.title(`Mode NODE_ENV: ${process.env.NODE_ENV}`);
+    log.title(`Mode NODE_ENV: ${buildConfig.NodeEnv}`);
 }
 
 gulp.task('clean-build', (done) => {
-    del([`${appBuildFolder}`], {force:true}).then(paths => {
+    del([buildConfig.Build.root_path], {force:true}).then(paths => {
         done();
     });
 });
 
 gulp.task('copy-views', (done) => {
     gulp.src([`src-server/views/**/*.pug`])
-        .pipe(gulp.dest(`${appBuildFolder}/views`))
+        .pipe(gulp.dest(`${buildConfig.Build.root_path}/views`))
         .on('end', () => { 
             done();
         });
 });
 
 gulp.task('copy-config', (done) => {
-    gulp.src([`config/env/${process.env.NODE_ENV}.env`])
+    gulp.src([`config/env/${buildConfig.NodeEnv}.env`])
         .pipe(rename('.env'))
         .pipe(gulp.dest('./'))
         .on('end', () => { 
@@ -56,38 +60,29 @@ gulp.task('copy-config', (done) => {
 });
 
 gulp.task('typescript-compile', (done) => {
-
     let tsBuild = tsProject.src();
-
-    if(process.env.NODE_ENV != 'production'){
+    if(buildConfig.EnviromentNotIs('production')){
         tsBuild = tsBuild.pipe(sourcemaps.init());
     }
     tsBuild = tsBuild.pipe(tsProject());
-    if(process.env.NODE_ENV != 'production'){
-
+    if(buildConfig.EnviromentNotIs('production')){
         tsBuild = tsBuild.pipe(sourcemaps.mapSources(function(sourcePath, file) {
             var filePath = path.relative(file.dirname, path.join(__dirname, sourcePath)).substr(3);
             return filePath;
         }));
-
         tsBuild = tsBuild.pipe(sourcemaps.write( '.' ));
     }
-    tsBuild = tsBuild.pipe(gulp.dest(appBuildFolder));
-
-    gulp.watch([
-        "src-server/**/*"
-        , "src-server/*"
-      ], gulp.series('typescript-compile'));
-
-
+    tsBuild = tsBuild.pipe(gulp.dest(buildConfig.Build.root_path));
+    if(buildConfig.IsDevelopment()) {
+        gulp.watch(buildConfig.Server.Typescript.include, gulp.series('typescript-compile'));
+    }
     tsBuild.on('end', () => { 
         done();
     });
-
 });
 
 gulp.task('server-pm2', (done) => {
-    if(process.env.NODE_ENV == 'production') {
+    if(buildConfig.IsProduction()) {
         pm2.connect(function(err) {
             if (err) {
               console.error(err);
@@ -96,7 +91,7 @@ gulp.task('server-pm2', (done) => {
             
             pm2.start({
                 name : 'royal-gorilla',
-                script: appStartFile
+                script: buildConfig.Build.start_script
             }, function(err, apps) {
                 log.title('PM2 Started');
                 done();
@@ -107,13 +102,16 @@ gulp.task('server-pm2', (done) => {
     else {
         var nodemonOptions = { 
             nodemon: require('nodemon'),
-            script: appStartFile,
-            watch: [`${appBuildFolder}/*.js`,`${appBuildFolder}/**/*.js`]
+            script: buildConfig.Build.start_script,
+            watch: false
         }
 
-        if(process.env.NODE_ENV == 'development') {
+        if(buildConfig.IsDevelopment()) {
             easter.Rule();
-            nodemonOptions.exec = 'node --inspect-brk';
+            nodemonOptions.watch = buildConfig.DevServer.NodeWatch;
+            if(buildConfig.DevServer.NodeAttachDebug) {
+                nodemonOptions.exec = 'node --inspect-brk';
+            }
         }
 
         var stream = nodemon(nodemonOptions);
@@ -124,8 +122,10 @@ gulp.task('server-pm2', (done) => {
                 done();
             })
             .on('restart', function () {
-                log.warn('NODEMON Restarted');
-                browserSync.reload();
+                log.warn('NODEMON Restarted'); 
+                if(buildConfig.IsDevelopment()) {
+                    browserSync.reload();
+                }
             })
             .on('crash', function() {
                 log.error('Application has crashed!\n');
@@ -138,10 +138,10 @@ gulp.task('server-pm2', (done) => {
 });
 
 gulp.task('webpack', function(done) {
-	webpack( webpackConfig, function(err, stats) {
+	webpack(webpackConfig, function(err, stats) {
         if(err) throw err;
-		gutil.log("[webpack]", stats.toString());
-		done();
+        gutil.log("[webpack]", stats.toString());
+        done();
 	});
 });
 
@@ -150,20 +150,15 @@ gulp.task('webpack-dev-server', function(done) {
     var browserSyncConfig = {
         port: webpackConfig.devServer.port,
         proxy: webpackConfig.devServer.proxy,
-        files: [
-          '*.css',
-          '*.scss'
-        ]
     };
+
     browserSyncConfig.proxy.middleware = [
         webpackDevMiddleware(bundler, {
           publicPath: webpackConfig.output.publicPath,
           stats: { colors: true },
           hot: true
         }),
-        webpackHotMiddleware(bundler, {
-            publicPath: webpackConfig.output.publicPath,
-            hot: true})
+        webpackHotMiddleware(bundler, { publicPath: webpackConfig.output.publicPath, hot: true })
     ];
 
     browserSync.init(browserSyncConfig);
