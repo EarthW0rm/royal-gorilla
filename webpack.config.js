@@ -4,28 +4,31 @@ const HtmlWebPackPlugin = require("html-webpack-plugin");
 
 module.exports = function() {
 
+
     return {
-        entry: './src-front/index.jsx'
+        entry: [
+            'react-hot-loader/patch',
+            'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000&reload=true',
+            './src-front/index.jsx'
+        ] 
+        , mode: 'development'
         , output:{
             path: __dirname + '/build/public'
             , filename: './app.js'
+            , publicPath: 'http://localhost:8080/'
         }
         , devServer: {
             historyApiFallback: true,
-            // hot: true,
-            // inline: true,          
+            hot: true,
+            inline: true,          
             host: 'localhost',
             port: 8080,
             open: true,
             openPage: '',
             progress: true,
             proxy: {
-                '*': {
-                    target: 'http://localhost:3000/',
-                    secure: false
-                }
-            },
-            stats: { colors: true },
+                target: 'http://localhost:3001/'
+            }
         }
         , devtool: 'eval-source-map'
         , resolve:{
@@ -58,9 +61,17 @@ module.exports = function() {
                 ,{
                     test: /\.scss$/
                     , exclude: /(node_modules|bower_components)/
-                    , use: ExtractTextPlugin.extract({
-                        use: ['css-loader', 'sass-loader']
-                    })
+                    , use: [{
+                            loader: "style-loader"
+                        }, {
+                            loader: "css-loader", options: {
+                                sourceMap: true
+                            }
+                        }, {
+                            loader: "sass-loader", options: {
+                                sourceMap: true
+                            }
+                        }]
                 }            
                 ,{
                     test: /\.woff|.woff2|.ttf|.eot|.svg*.*$/
@@ -98,6 +109,10 @@ module.exports = function() {
                 filename: 'app.css'
                 , allChunks: true
             })
+            //, new webpack.optimize.OccurenceOrderPlugin()
+            , new webpack.HotModuleReplacementPlugin()
+            // Use NoErrorsPlugin for webpack 1.x
+            // , new webpack.NoEmitOnErrorsPlugin()
             //, new FaviconsWebpackPlugin('favicon.png')
             // , new HtmlWebPackPlugin({
             //     template: "./src/index.html",

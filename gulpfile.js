@@ -13,11 +13,15 @@ const del = require('del');
 const gutil = require("gulp-util");
 const webpack = require("webpack");
 const WebpackDevServer = require("webpack-dev-server");
+const exec = require('gulp-exec');
 
-process.env.NODE_ENV="development"
 const appBuildFolder = './build';
 const appStartFile = `${appBuildFolder}/RoyalGorillaApp.js`
+let webpackConfig = require('./webpack.config')();
 
+const browserSync = require('browser-sync').create();
+
+process.env.NODE_ENV="development"
 
 if(!process.env.NODE_ENV || modes.indexOf(process.env.NODE_ENV.trim()) < 0){
     throw new Error(`Mode inválido NODE_ENV: ${process.env.NODE_ENV}`);
@@ -29,30 +33,6 @@ if(!process.env.NODE_ENV || modes.indexOf(process.env.NODE_ENV.trim()) < 0){
     log.title(`Mode NODE_ENV: ${process.env.NODE_ENV}`);
 }
 
-gulp.task("webpack", function(done) {
-	webpack( require('./webpack.config')(), function(err, stats) {
-		if(err) throw new gutil.PluginError("webpack", err);
-		gutil.log("[webpack]", stats.toString());
-		done();
-	});
-});
-
-gulp.task("webpack-dev-server", function(done) {
-    var webpackConfig = require('./webpack.config')()
-    var webpackInstance = webpack(webpackConfig);
-    webpackConfig.debug = true;
-    webpackConfig.watch = true;
-
-    var webpackServer = new WebpackDevServer(webpackInstance, webpackConfig.devServer);
-
-    webpackServer.listen(8081, webpackConfig.devServer.host, function(err) { 
-        if(err) throw new gutil.PluginError("webpack-dev-server", err); 
-        done();
-        gutil.log("[webpack-dev-server]", "http://localhost:8080/");
-    });
-        
-    webpackServer.sockWrite(webpackServer.sockets, 'content-changed');
-});
 
 gulp.task('clean-build', (done) => {
     del([`${appBuildFolder}`], {force:true}).then(paths => {
@@ -127,7 +107,7 @@ gulp.task('server-pm2', (done) => {
 
         if(process.env.NODE_ENV == 'development') {
             easter.Rule();
-            nodemonOptions.exec = 'node --inspect-brk';
+            //nodemonOptions.exec = 'node --inspect-brk';
         }
 
         var stream = nodemon(nodemonOptions);
@@ -139,6 +119,7 @@ gulp.task('server-pm2', (done) => {
             })
             .on('restart', function () {
                 log.warn('NODEMON Restarted');
+                browserSync.BrowserSync.reload();
             })
             .on('crash', function() {
                 log.error('Application has crashed!\n');
@@ -148,6 +129,42 @@ gulp.task('server-pm2', (done) => {
                 log.lightInfo('NODEMON Exited!');
             });
     }
+});
+
+gulp.task('webpack', function(done) {
+	webpack( webpackConfig, function(err, stats) {
+        if(err) throw err;
+		gutil.log("[webpack]", stats.toString());
+		done();
+	});
+});
+var webpackDevMiddleware = require('webpack-dev-middleware');
+var webpackHotMiddleware = require('webpack-hot-middleware');
+
+gulp.task('webpack-dev-server', function(done) {
+
+    var bundler = webpack(webpackConfig);
+    var browserSyncConfig = {
+        port: webpackConfig.devServer.port,
+        proxy: webpackConfig.devServer.proxy,
+
+        files: [
+          '*.css',
+          '*.scss'
+        ]
+    };
+    browserSyncConfig.proxy.middleware = [
+        webpackDevMiddleware(bundler, {
+          publicPath: webpackConfig.output.publicPath,
+          stats: { colors: true },
+          hot: true
+        }),
+        webpackHotMiddleware(bundler, {
+            publicPath: webpackConfig.output.publicPath,
+            hot: true})
+    ];
+
+    browserSync.init(browserSyncConfig);
 });
 
 gulp.task('build', gulp.series('clean-build', 'copy-config', gulp.parallel('copy-views', 'typescript-compile', 'webpack')), (done) => {
@@ -160,7 +177,7 @@ gulp.task('super', gulp.series('build', 'server-pm2'), (done) => {
     done();
 });
 
-gulp.task('super-dev-server', gulp.series('build', gulp.parallel('server-pm2','webpack-dev-server' )), (done) => {
+gulp.task('super-dev-server', gulp.series('build', gulp.parallel('server-pm2','webpack-dev-server')), (done) => {
     log.warn('Task completed: super-dev-server');
     done();
 });

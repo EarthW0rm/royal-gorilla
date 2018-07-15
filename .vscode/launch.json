@@ -17,7 +17,7 @@
             "request": "launch",
             "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
             "stopOnEntry": false,
-            "args": ["super"],
+            "args": ["webpack-dev-server"],
             "cwd": "${workspaceRoot}",
             "runtimeArgs": [
                 "--nolazy"

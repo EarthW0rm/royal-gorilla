@@ -25,6 +25,7 @@ body {
                 & .navbar-brand {
                     @extend %main-font-config;
                     color: white;
+                    padding: 0px;
                     font-size: 30px;
                     font-weight: 600;
                     

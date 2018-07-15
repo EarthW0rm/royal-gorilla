@@ -19,7 +19,7 @@ export default class RootRoute extends RoyalG.Routing.RoyalRouter {
     
     @configurable(true)
     getHomePage(req: express.Request, res: express.Response) {
-        res.render('index', { title: 'Express' });
+        res.render('index', { title: 'Tony' });
     }
 
     getBasicInfo(req: express.Request, res: express.Response) {
