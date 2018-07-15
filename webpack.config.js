@@ -1,9 +1,10 @@
 const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const buildConfig = require('./build.config');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = function(env){
-    return {
+    var config = {
         entry: buildConfig.Server.EntryPoint
         , mode: buildConfig.Build.Mode
         , output: buildConfig.Build.Output
@@ -20,7 +21,7 @@ module.exports = function(env){
                 target: `http://${buildConfig.Host}:${buildConfig.Server.NodePort}/`
             }
         }
-        , devtool: 'eval-source-map'
+        
         , resolve:{
             extensions: ['.js', '.jsx', '.scss', '.css', '.html', 'jpg']
             , alias: {
@@ -55,11 +56,11 @@ module.exports = function(env){
                             loader: "style-loader"
                         }, {
                             loader: "css-loader", options: {
-                                sourceMap: true
+                                sourceMap: buildConfig.IsDevelopment()
                             }
                         }, {
                             loader: "sass-loader", options: {
-                                sourceMap: true
+                                sourceMap: buildConfig.IsDevelopment()
                             }
                         }]
                 }            
@@ -99,7 +100,19 @@ module.exports = function(env){
                 filename: 'app.css'
                 , allChunks: true
             })
-            , new webpack.HotModuleReplacementPlugin()
+            , new UglifyJSPlugin({
+                test: /\.js($|\?)/i
+                , sourceMap: buildConfig.IsDevelopment()
+            })
+            
         ]
     }
+
+    if(buildConfig.IsDevelopment()){
+        config.devtool = 'eval-source-map';
+        config.plugins.push(new webpack.HotModuleReplacementPlugin());
+    }
+    
+
+    return config;
 };

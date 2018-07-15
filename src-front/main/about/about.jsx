@@ -14,7 +14,7 @@ export default props => (
             <li>A causa de sua cicatriz foi uma briga quando criança.</li>
             <li>Seu pai lhe abandonou quando ainda era criança.</li>
             <li>O relacionamento com sua mãe e sua irmã era muito difícil.</li>
-            <li>Casado com Elvira, ex-esposa de seu antigo patrão. :p</li>
+            <li>Casado com Elvira, ex-esposa de seu antigo patrão.</li>
         </ul>
         <div className="row">
             <div className="col-md-4">

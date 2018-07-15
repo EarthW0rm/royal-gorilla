@@ -1,4 +1,3 @@
-process.env.NODE_ENV="beta"
 const buildConfig = require('./build.config');
 
 
@@ -176,12 +175,12 @@ gulp.task('build', gulp.series('pre-build', gulp.parallel('webpack', 'typescript
     done();
 });
 
-gulp.task('server', gulp.series('build', 'server-pm2'), (done) => {
+gulp.task('server', gulp.series('build', 'server-pm2' ), (done) => {
     log.warn('Task completed: super');
     done();
 });
 
-gulp.task('super', gulp.series('server', 'webpack-dev-server'), (done) => {
+gulp.task('super', gulp.series('server', 'webpack-dev-server'),  (done) => {
     log.warn('Task completed: super-dev-server');
     done();
 });
