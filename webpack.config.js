@@ -2,7 +2,7 @@ const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 
-module.exports = function(env) {
+module.exports = function() {
 
     return {
         entry: './src-front/index.jsx'
@@ -12,16 +12,20 @@ module.exports = function(env) {
         }
         , devServer: {
             historyApiFallback: true,
-            hot: true,
-            inline: true,          
+            // hot: true,
+            // inline: true,          
             host: 'localhost',
             port: 8080,
+            open: true,
+            openPage: '',
+            progress: true,
             proxy: {
                 '*': {
                     target: 'http://localhost:3000/',
                     secure: false
                 }
-            }
+            },
+            stats: { colors: true },
         }
         , devtool: 'eval-source-map'
         , resolve:{

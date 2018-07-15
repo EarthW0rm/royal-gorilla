@@ -10,6 +10,9 @@ const easter = require('./gulp/rg-gulp-easter');
 const log = easter.MessageHelper;
 const sourcemaps = require('gulp-sourcemaps');
 const del = require('del');
+const gutil = require("gulp-util");
+const webpack = require("webpack");
+const WebpackDevServer = require("webpack-dev-server");
 
 process.env.NODE_ENV="development"
 const appBuildFolder = './build';
@@ -25,6 +28,31 @@ if(!process.env.NODE_ENV || modes.indexOf(process.env.NODE_ENV.trim()) < 0){
     }
     log.title(`Mode NODE_ENV: ${process.env.NODE_ENV}`);
 }
+
+gulp.task("webpack", function(done) {
+	webpack( require('./webpack.config')(), function(err, stats) {
+		if(err) throw new gutil.PluginError("webpack", err);
+		gutil.log("[webpack]", stats.toString());
+		done();
+	});
+});
+
+gulp.task("webpack-dev-server", function(done) {
+    var webpackConfig = require('./webpack.config')()
+    var webpackInstance = webpack(webpackConfig);
+    webpackConfig.debug = true;
+    webpackConfig.watch = true;
+
+    var webpackServer = new WebpackDevServer(webpackInstance, webpackConfig.devServer);
+
+    webpackServer.listen(8081, webpackConfig.devServer.host, function(err) { 
+        if(err) throw new gutil.PluginError("webpack-dev-server", err); 
+        done();
+        gutil.log("[webpack-dev-server]", "http://localhost:8080/");
+    });
+        
+    webpackServer.sockWrite(webpackServer.sockets, 'content-changed');
+});
 
 gulp.task('clean-build', (done) => {
     del([`${appBuildFolder}`], {force:true}).then(paths => {
@@ -122,7 +150,17 @@ gulp.task('server-pm2', (done) => {
     }
 });
 
-gulp.task('super', gulp.series('clean-build', gulp.parallel('copy-config','copy-views' ), 'typescript-compile', 'server-pm2'), (done) => {
-    log.warn('Tasks completed');
+gulp.task('build', gulp.series('clean-build', 'copy-config', gulp.parallel('copy-views', 'typescript-compile', 'webpack')), (done) => {
+    log.warn('Task completed: build');
+    done();
+});
+
+gulp.task('super', gulp.series('build', 'server-pm2'), (done) => {
+    log.warn('Task completed: super');
+    done();
+});
+
+gulp.task('super-dev-server', gulp.series('build', gulp.parallel('server-pm2','webpack-dev-server' )), (done) => {
+    log.warn('Task completed: super-dev-server');
     done();
 });
