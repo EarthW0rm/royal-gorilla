@@ -9,6 +9,7 @@ const nodemon = require('gulp-nodemon');
 const easter = require('./gulp/rg-gulp-easter');
 const log = easter.MessageHelper;
 const sourcemaps = require('gulp-sourcemaps');
+const del = require('del');
 
 process.env.NODE_ENV="development"
 const appBuildFolder = './build';
@@ -24,6 +25,20 @@ if(!process.env.NODE_ENV || modes.indexOf(process.env.NODE_ENV.trim()) < 0){
     }
     log.title(`Mode NODE_ENV: ${process.env.NODE_ENV}`);
 }
+
+gulp.task('clean-build', (done) => {
+    del([`${appBuildFolder}`], {force:true}).then(paths => {
+        done();
+    });
+});
+
+gulp.task('copy-views', (done) => {
+    gulp.src([`src-server/views/**/*.pug`])
+        .pipe(gulp.dest(`${appBuildFolder}/views`))
+        .on('end', () => { 
+            done();
+        });
+});
 
 gulp.task('copy-config', (done) => {
     gulp.src([`config/env/${process.env.NODE_ENV}.env`])
@@ -55,7 +70,6 @@ gulp.task('typescript-compile', (done) => {
     tsBuild.on('end', () => { 
         done();
     });
-
 });
 
 gulp.task('server-pm2', (done) => {
@@ -108,6 +122,7 @@ gulp.task('server-pm2', (done) => {
     }
 });
 
-gulp.task('super', gulp.series('copy-config', gulp.parallel('typescript-compile'), 'server-pm2'), (done) => {
+gulp.task('super', gulp.series('clean-build', gulp.parallel('copy-config','copy-views' ), 'typescript-compile', 'server-pm2'), (done) => {
+    log.warn('Tasks completed');
     done();
 });
