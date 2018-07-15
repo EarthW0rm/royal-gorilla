@@ -10,6 +10,20 @@ module.exports = function(env) {
             path: __dirname + '/build/public'
             , filename: './app.js'
         }
+        , devServer: {
+            historyApiFallback: true,
+            hot: true,
+            inline: true,          
+            host: 'localhost', // Defaults to `localhost`
+            port: 8080, // Defaults to 8080
+            proxy: {
+                '*': {
+                    target: 'http://localhost:3000/',
+                    secure: false
+                }
+            }
+        }
+        , devtool: 'eval-source-map'
         , resolve:{
             extensions: ['.js', '.jsx', '.scss', '.css', '.html', 'jpg']
             , alias: {

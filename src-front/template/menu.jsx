@@ -7,7 +7,7 @@ export default props => (
           <div className="navbar-header">
             <a className="navbar-brand" href="#">
                 <i className="fa fa-calendar-check-o"></i>
-                Tarefas do Juninho
+                Royal-Gorilla
             </a>
           </div>
           <div id="navbar" className="navbar-collapse collapsed">

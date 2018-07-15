@@ -4,7 +4,8 @@
   "scripts": {
     "start": "tsc && webpack --progress -p && node ./build/royalgorillaapp.js",
     "start:debug": "tsc && webpack --progress -p --mode development && node --inspect-brk ./build/royalgorillaapp.js",
-    "gulp": "gulp"
+    "gulp": "gulp",
+    "dev": "webpack-dev-server --progress --colors --hot --open --mode development"
   },
   "license": "AGPL-3.0-or-later",
   "description": "royal-gorilla",
