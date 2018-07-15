@@ -17,6 +17,6 @@ export default class RootRoute extends RoyalG.Routing.RoyalRouter {
     }
 
     getHomePage(req: express.Request, res: express.Response) {
-        res.render('index', { title: 'Tony Montana' });
+        res.render('index', { title: 'Say hello to my little friend!' });
     }
 }

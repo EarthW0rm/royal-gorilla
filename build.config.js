@@ -1,10 +1,34 @@
 const jsonfile = require('jsonfile');
+const easter = require('./gulp/rg-gulp-easter');
+const log = easter.MessageHelper;
 
 class BuildConfig {
-    constructor(){
+
+
+    static GetInstance(){
+        if(!BuildConfig.instance)
+            BuildConfig.instance = new BuildConfig();
+        return BuildConfig.instance;
+    }
+
+    constructor() {
+        require('dotenv').config();
+
         this.Host = 'localhost';
         this.NodeEnv = process.env.NODE_ENV.trim();
         this.Modes = ['development', 'staging', 'beta', 'production']
+
+        if(!this.ModeIsValid()){
+            throw new Error(`Mode inválido NODE_ENV: ${this.NodeEnv}`);
+        } else {
+            if(this.IsDevelopment()){
+                easter.Logo();
+                log.title('\\m/');
+            }
+            log.title(`Mode NODE_ENV: ${this.NodeEnv}`);
+        }
+       
+        
         this.Server = {
             Typescript: {
                 tsconfig: './tsconfig.json',
@@ -24,7 +48,7 @@ class BuildConfig {
         }
         this.DevServer = {
             NodeWatch: ['./build/*.js','./build/**/*.js'],
-            NodeAttachDebug: process.env.DEV_ATTACH ? true : false,
+            NodeAttachDebug: process.env.DEV_ATTACH && process.env.DEV_ATTACH=="true" ? true : false,
             BrowserSyncPort: process.env.DEV_PORT ? parseInt(process.env.DEV_PORT) : 8080,
         }
 
@@ -56,4 +80,4 @@ class BuildConfig {
     }
 }
 
-module.exports = new BuildConfig();
+module.exports = BuildConfig;

@@ -1,6 +1,6 @@
 const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
-const buildConfig = require('./build.config');
+const buildConfig = require('./build.config').GetInstance();
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = function(env){

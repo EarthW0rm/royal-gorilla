@@ -1,7 +1,8 @@
-const buildConfig = require('./build.config');
+process.env.NODE_ENV="development"
+const buildConfigClass = require('./build.config');
+let buildConfig  = null;
+let webpackConfig = null;
 
-
-const modes = ['development', 'staging', 'production', 'beta'];
 const gulp = require('gulp');
 const rename = require('gulp-rename');
 const path = require("path");
@@ -14,26 +15,24 @@ const log = easter.MessageHelper;
 const sourcemaps = require('gulp-sourcemaps');
 const del = require('del');
 const gutil = require("gulp-util");
+
 const webpack = require("webpack");
 const webpackDevMiddleware = require('webpack-dev-middleware');
 const webpackHotMiddleware = require('webpack-hot-middleware');
 
-const appBuildFolder = './build';
-const appStartFile = `${appBuildFolder}/RoyalGorillaApp.js`
-let webpackConfig = require('./webpack.config')();
 const browserSync = require('browser-sync').create();
 
+gulp.task('copy-config', (done) => {
+    gulp.src([`config/env/${process.env.NODE_ENV}.env`])
+        .pipe(rename('.env'))
+        .pipe(gulp.dest('./'))
+        .on('end', () => { 
+            done();
+            buildConfig = buildConfigClass.GetInstance();
+            webpackConfig = require('./webpack.config')();
+        });
+});
 
-
-if(!buildConfig.ModeIsValid()){
-    throw new Error(`Mode inválido NODE_ENV: ${buildConfig.NodeEnv}`);
-} else {
-    if(buildConfig.IsDevelopment()){
-        easter.Logo();
-        log.title('\\m/');
-    }
-    log.title(`Mode NODE_ENV: ${buildConfig.NodeEnv}`);
-}
 
 gulp.task('clean-build', (done) => {
     del([buildConfig.Build.root_path], {force:true}).then(paths => {
@@ -44,15 +43,6 @@ gulp.task('clean-build', (done) => {
 gulp.task('copy-views', (done) => {
     gulp.src([`src-server/views/**/*.pug`])
         .pipe(gulp.dest(`${buildConfig.Build.root_path}/views`))
-        .on('end', () => { 
-            done();
-        });
-});
-
-gulp.task('copy-config', (done) => {
-    gulp.src([`config/env/${buildConfig.NodeEnv}.env`])
-        .pipe(rename('.env'))
-        .pipe(gulp.dest('./'))
         .on('end', () => { 
             done();
         });
@@ -163,9 +153,7 @@ gulp.task('webpack-dev-server', function(done) {
     browserSync.init(browserSyncConfig);
 });
 
-
-
-gulp.task('pre-build', gulp.series('clean-build', 'copy-config', 'copy-views'), (done) => {
+gulp.task('pre-build', gulp.series('copy-config', 'clean-build', 'copy-views'), (done) => {
     log.warn('Task completed: pre-build');
     done();
 });
@@ -175,12 +163,9 @@ gulp.task('build', gulp.series('pre-build', gulp.parallel('webpack', 'typescript
     done();
 });
 
-gulp.task('server', gulp.series('build', 'server-pm2' ), (done) => {
-    log.warn('Task completed: super');
-    done();
-});
-
-gulp.task('super', gulp.series('server', 'webpack-dev-server'),  (done) => {
+gulp.task('super', gulp.series('build', gulp.parallel('server-pm2', 'webpack-dev-server')),  (done) => {
     log.warn('Task completed: super-dev-server');
     done();
 });
+
+gulp.task('default', gulp.series('super'));
