@@ -12,16 +12,15 @@ const sourcemaps = require('gulp-sourcemaps');
 const del = require('del');
 const gutil = require("gulp-util");
 const webpack = require("webpack");
-const WebpackDevServer = require("webpack-dev-server");
-const exec = require('gulp-exec');
+const webpackDevMiddleware = require('webpack-dev-middleware');
+const webpackHotMiddleware = require('webpack-hot-middleware');
 
 const appBuildFolder = './build';
 const appStartFile = `${appBuildFolder}/RoyalGorillaApp.js`
 let webpackConfig = require('./webpack.config')();
-
 const browserSync = require('browser-sync').create();
-
 process.env.NODE_ENV="development"
+
 
 if(!process.env.NODE_ENV || modes.indexOf(process.env.NODE_ENV.trim()) < 0){
     throw new Error(`Mode inválido NODE_ENV: ${process.env.NODE_ENV}`);
@@ -32,7 +31,6 @@ if(!process.env.NODE_ENV || modes.indexOf(process.env.NODE_ENV.trim()) < 0){
     }
     log.title(`Mode NODE_ENV: ${process.env.NODE_ENV}`);
 }
-
 
 gulp.task('clean-build', (done) => {
     del([`${appBuildFolder}`], {force:true}).then(paths => {
@@ -75,9 +73,17 @@ gulp.task('typescript-compile', (done) => {
         tsBuild = tsBuild.pipe(sourcemaps.write( '.' ));
     }
     tsBuild = tsBuild.pipe(gulp.dest(appBuildFolder));
+
+    gulp.watch([
+        "src-server/**/*"
+        , "src-server/*"
+      ], gulp.series('typescript-compile'));
+
+
     tsBuild.on('end', () => { 
         done();
     });
+
 });
 
 gulp.task('server-pm2', (done) => {
@@ -102,12 +108,12 @@ gulp.task('server-pm2', (done) => {
         var nodemonOptions = { 
             nodemon: require('nodemon'),
             script: appStartFile,
-            watch: [`${appBuildFolder}/*.js`]
+            watch: [`${appBuildFolder}/*.js`,`${appBuildFolder}/**/*.js`]
         }
 
         if(process.env.NODE_ENV == 'development') {
             easter.Rule();
-            //nodemonOptions.exec = 'node --inspect-brk';
+            nodemonOptions.exec = 'node --inspect-brk';
         }
 
         var stream = nodemon(nodemonOptions);
@@ -119,7 +125,7 @@ gulp.task('server-pm2', (done) => {
             })
             .on('restart', function () {
                 log.warn('NODEMON Restarted');
-                browserSync.BrowserSync.reload();
+                browserSync.reload();
             })
             .on('crash', function() {
                 log.error('Application has crashed!\n');
@@ -138,16 +144,12 @@ gulp.task('webpack', function(done) {
 		done();
 	});
 });
-var webpackDevMiddleware = require('webpack-dev-middleware');
-var webpackHotMiddleware = require('webpack-hot-middleware');
 
 gulp.task('webpack-dev-server', function(done) {
-
     var bundler = webpack(webpackConfig);
     var browserSyncConfig = {
         port: webpackConfig.devServer.port,
         proxy: webpackConfig.devServer.proxy,
-
         files: [
           '*.css',
           '*.scss'
@@ -167,17 +169,24 @@ gulp.task('webpack-dev-server', function(done) {
     browserSync.init(browserSyncConfig);
 });
 
-gulp.task('build', gulp.series('clean-build', 'copy-config', gulp.parallel('copy-views', 'typescript-compile', 'webpack')), (done) => {
+
+
+gulp.task('pre-build', gulp.series('clean-build', 'copy-config', 'copy-views'), (done) => {
+    log.warn('Task completed: pre-build');
+    done();
+});
+
+gulp.task('build', gulp.series('pre-build', gulp.parallel('webpack', 'typescript-compile')), (done) => {
     log.warn('Task completed: build');
     done();
 });
 
-gulp.task('super', gulp.series('build', 'server-pm2'), (done) => {
+gulp.task('server', gulp.series('build', 'server-pm2'), (done) => {
     log.warn('Task completed: super');
     done();
 });
 
-gulp.task('super-dev-server', gulp.series('build', gulp.parallel('server-pm2','webpack-dev-server')), (done) => {
+gulp.task('super', gulp.series('server', 'webpack-dev-server'), (done) => {
     log.warn('Task completed: super-dev-server');
     done();
 });

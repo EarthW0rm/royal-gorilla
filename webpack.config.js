@@ -8,10 +8,10 @@ module.exports = function() {
     return {
         entry: [
             'react-hot-loader/patch',
-            'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000&reload=true',
+            'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000&reload=true&quiet=true',
             './src-front/index.jsx'
         ] 
-        , mode: 'development'
+        , mode: 'production'
         , output:{
             path: __dirname + '/build/public'
             , filename: './app.js'
@@ -27,7 +27,7 @@ module.exports = function() {
             openPage: '',
             progress: true,
             proxy: {
-                target: 'http://localhost:3001/'
+                target: 'http://localhost:4000/'
             }
         }
         , devtool: 'eval-source-map'
@@ -97,7 +97,7 @@ module.exports = function() {
                     use: [{
                         loader: 'url-loader',
                         options: { 
-                            limit: 8000, // Convert images < 8kb to base64 strings
+                            limit: 16000, // Convert images < 8kb to base64 strings
                             name: 'images/[hash]-[name].[ext]'
                         } 
                     }]

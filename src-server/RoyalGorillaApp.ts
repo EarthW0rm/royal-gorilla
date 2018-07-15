@@ -6,6 +6,7 @@ import ErrorHandler from './server/middlewares/ErrorHandler';
 
 const RoyalGorillaApp = express();
 
+
 RoyalGorillaApp.set('port', RG_API_PORT);
 RoyalGorillaApp.set('env', RG_NODE_ENV);
 RoyalGorillaApp.set('views', path.join(__dirname, 'views'));

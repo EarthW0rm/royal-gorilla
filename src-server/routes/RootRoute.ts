@@ -14,15 +14,9 @@ export default class RootRoute extends RoyalG.Routing.RoyalRouter {
     constructor(_Router: core.Router, _BasePath : string){
         super(_Router, _BasePath);
         super.RegisterRoute( HTTP_METHODS.GET, '/', this.getHomePage);
-        super.RegisterRoute( HTTP_METHODS.GET, '/info', this.getBasicInfo);
-    }
-    
-    @configurable(true)
-    getHomePage(req: express.Request, res: express.Response) {
-        res.render('index', { title: 'Tony' });
     }
 
-    getBasicInfo(req: express.Request, res: express.Response) {
-        res.send("INDEX INFO");
+    getHomePage(req: express.Request, res: express.Response) {
+        res.render('index', { title: 'Tony Montana' });
     }
 }
