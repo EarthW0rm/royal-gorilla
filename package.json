@@ -2,11 +2,14 @@
   "name": "royal-gorilla",
   "version": "0.0.0",
   "scripts": {
-    "start": "tsc && webpack --progress -p && node ./build/royalgorillaapp.js",
-    "start:debug": "tsc && webpack --progress -p --mode development && node --inspect-brk ./build/royalgorillaapp.js",
-    "gulp": "gulp",
+    "start": "cross-env NODE_ENV=development DEV_ATTACH=false gulp super",
+    "debug": "cross-env NODE_ENV=development DEV_ATTACH=true gulp super",
+    "build": "cross-env NODE_ENV=production gulp build",
+    "start:prod": "cross-env NODE_ENV=production gulp server",
+    "start:stag": "cross-env NODE_ENV=staging gulp server",
+    "start:beta": "cross-env NODE_ENV=beta gulp server",
     "pm2": "pm2",
-    "dev": "webpack-dev-server --progress --colors --hot --open --mode development"
+    "gulp": "gulp"
   },
   "license": "AGPL-3.0-or-later",
   "description": "royal-gorilla",
@@ -43,6 +46,7 @@
     "chalk": "^2.4.1",
     "classnames": "^2.2.6",
     "core-js": "^2.5.7",
+    "cross-env": "^5.2.0",
     "css-loader": "^1.0.0",
     "del": "^3.0.0",
     "dotenv": "^6.0.0",

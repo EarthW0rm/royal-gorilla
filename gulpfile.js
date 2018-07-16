@@ -1,4 +1,3 @@
-process.env.NODE_ENV="development"
 const buildConfigClass = require('./build.config');
 let buildConfig  = null;
 let webpackConfig = null;
@@ -35,14 +34,14 @@ gulp.task('copy-config', (done) => {
 
 
 gulp.task('clean-build', (done) => {
-    del([buildConfig.Build.root_path], {force:true}).then(paths => {
+    del([buildConfigClass.GetInstance().Build.root_path], {force:true}).then(paths => {
         done();
     });
 });
 
 gulp.task('copy-views', (done) => {
     gulp.src([`src-server/views/**/*.pug`])
-        .pipe(gulp.dest(`${buildConfig.Build.root_path}/views`))
+        .pipe(gulp.dest(`${buildConfigClass.GetInstance().Build.root_path}/views`))
         .on('end', () => { 
             done();
         });
@@ -50,20 +49,20 @@ gulp.task('copy-views', (done) => {
 
 gulp.task('typescript-compile', (done) => {
     let tsBuild = tsProject.src();
-    if(buildConfig.EnviromentNotIs('production')){
+    if(buildConfigClass.GetInstance().EnviromentNotIs('production')){
         tsBuild = tsBuild.pipe(sourcemaps.init());
     }
     tsBuild = tsBuild.pipe(tsProject());
-    if(buildConfig.EnviromentNotIs('production')){
+    if(buildConfigClass.GetInstance().EnviromentNotIs('production')){
         tsBuild = tsBuild.pipe(sourcemaps.mapSources(function(sourcePath, file) {
             var filePath = path.relative(file.dirname, path.join(__dirname, sourcePath)).substr(3);
             return filePath;
         }));
         tsBuild = tsBuild.pipe(sourcemaps.write( '.' ));
     }
-    tsBuild = tsBuild.pipe(gulp.dest(buildConfig.Build.root_path));
-    if(buildConfig.IsDevelopment()) {
-        gulp.watch(buildConfig.Server.Typescript.include, gulp.series('typescript-compile'));
+    tsBuild = tsBuild.pipe(gulp.dest(buildConfigClass.GetInstance().Build.root_path));
+    if(buildConfigClass.GetInstance().IsDevelopment()) {
+        gulp.watch(buildConfigClass.GetInstance().Server.Typescript.include, gulp.series('typescript-compile'));
     }
     tsBuild.on('end', () => { 
         done();
@@ -71,7 +70,7 @@ gulp.task('typescript-compile', (done) => {
 });
 
 gulp.task('server-pm2', (done) => {
-    if(buildConfig.IsProduction()) {
+    if(buildConfigClass.GetInstance().IsProduction()) {
         pm2.connect(function(err) {
             if (err) {
               console.error(err);
@@ -80,7 +79,7 @@ gulp.task('server-pm2', (done) => {
             
             pm2.start({
                 name : 'royal-gorilla',
-                script: buildConfig.Build.start_script
+                script: buildConfigClass.GetInstance().Build.start_script
             }, function(err, apps) {
                 log.title('PM2 Started');
                 done();
@@ -91,14 +90,14 @@ gulp.task('server-pm2', (done) => {
     else {
         var nodemonOptions = { 
             nodemon: require('nodemon'),
-            script: buildConfig.Build.start_script,
+            script: buildConfigClass.GetInstance().Build.start_script,
             watch: false
         }
 
-        if(buildConfig.IsDevelopment()) {
+        if(buildConfigClass.GetInstance().IsDevelopment()) {
             easter.Rule();
-            nodemonOptions.watch = buildConfig.DevServer.NodeWatch;
-            if(buildConfig.DevServer.NodeAttachDebug) {
+            nodemonOptions.watch = buildConfigClass.GetInstance().DevServer.NodeWatch;
+            if(buildConfigClass.GetInstance().DevServer.NodeAttachDebug) {
                 nodemonOptions.exec = 'node --inspect-brk';
             }
         }
@@ -112,7 +111,7 @@ gulp.task('server-pm2', (done) => {
             })
             .on('restart', function () {
                 log.warn('NODEMON Restarted'); 
-                if(buildConfig.IsDevelopment()) {
+                if(buildConfigClass.GetInstance().IsDevelopment()) {
                     browserSync.reload();
                 }
             })
@@ -160,6 +159,11 @@ gulp.task('pre-build', gulp.series('copy-config', 'clean-build', 'copy-views'), 
 
 gulp.task('build', gulp.series('pre-build', gulp.parallel('webpack', 'typescript-compile')), (done) => {
     log.warn('Task completed: build');
+    done();
+});
+
+gulp.task('server', gulp.series('build', gulp.parallel('server-pm2')),  (done) => {
+    log.warn('Task completed: server');
     done();
 });
 
