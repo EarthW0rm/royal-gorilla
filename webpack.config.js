@@ -2,6 +2,8 @@ const webpack = require('webpack');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const buildConfig = require('./build.config').GetInstance();
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
+const cssnano = require("cssnano");
 
 module.exports = function(env){
     var config = {
@@ -103,14 +105,23 @@ module.exports = function(env){
             , new UglifyJSPlugin({
                 test: /\.js($|\?)/i
                 , sourceMap: buildConfig.IsDevelopment()
-            })
-            
+            })            
         ]
     }
 
     if(buildConfig.IsDevelopment()){
         config.devtool = 'eval-source-map';
         config.plugins.push(new webpack.HotModuleReplacementPlugin());
+    } else {
+        config.plugins.push(new OptimizeCSSAssetsPlugin({
+            cssProcessor: cssnano,
+            cssProcessorOptions: {
+                discardComments: {
+                  removeAll: true,
+                },
+              },
+            canPrint: false,
+        }));
     }
     
 
