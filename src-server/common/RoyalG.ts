@@ -52,9 +52,19 @@ export namespace RoyalG {
                 switch(noKeyName){
                     case "index":
                     case "root":
-                        if(path.startsWith("/"))
+                        if(path.startsWith("/")){
                             newPath = `${startPath}${path.substr(1)}`;
-                        else
+                        }
+                        else if (path.startsWith(":")){
+                            var orinalPath = startPath.split('/').filter(s => s != "");
+                            var copoundPath = path.split('/').filter(s => s != "");
+                            orinalPath.splice(orinalPath.length - 1, 0, copoundPath[0]);
+                            var originStrng = orinalPath.join('/');
+                            copoundPath.shift();
+                            var nextPaths = copoundPath.join('/');
+                            newPath = `/${originStrng}/${nextPaths}`;
+                        }
+                        else                        
                             newPath = `${startPath}${path}`;
                         break;
                     default:
