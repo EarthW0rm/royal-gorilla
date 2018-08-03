@@ -21,6 +21,7 @@
     "body-parser": "^1.18.3",
     "compression": "^1.7.3",
     "express": "^4.14.0",
+    "html-webpack-pug-plugin": "^0.3.0",
     "jsend": "^1.0.2",
     "pug": "^2.0.0-rc.3",
     "recursive-readdir": "^2.2.2",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.53",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.53",
+    "@babel/polyfill": "^7.0.0-beta.55",
     "@babel/preset-env": "^7.0.0-beta.53",
     "@babel/preset-react": "^7.0.0-beta.53",
     "@coreui/coreui": "^2.0.4",

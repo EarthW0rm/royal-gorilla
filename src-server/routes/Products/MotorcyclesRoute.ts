@@ -15,13 +15,8 @@ export default class MotorcyclesRoute extends RoyalG.Routing.RoyalRouter {
     
     getHomePage(req: express.Request, res: express.Response) {
         debugger;
-
         let model = new MotorcyclesRequestModel(1, 'royal enfield', 1998);
         var err = model.Validate();
-
-
-
-        
 
         res.render('index', { title: 'Motorcycles Home Page' });
     }

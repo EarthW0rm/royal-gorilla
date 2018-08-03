@@ -4,6 +4,8 @@ const buildConfig = require('./build.config').GetInstance();
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const cssnano = require("cssnano");
+const HtmlWebpackPugPlugin = require('html-webpack-pug-plugin');
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = function(env){
     var config = {
@@ -23,23 +25,27 @@ module.exports = function(env){
                 target: `http://${buildConfig.Host}:${buildConfig.Server.NodePort}/`
             }
         }
-        
+        , optimization: {
+            splitChunks: {
+                chunks: 'all'
+            }
+            , removeAvailableModules: true
+        }
         , resolve:{
             extensions: ['.js', '.jsx', '.scss', '.css', '.html', 'jpg']
-            , alias: {
-                modules: __dirname + '/node_modules'
-            }
+            , alias: buildConfig.Build.AliasesResolvers
         }    
         , module: {
             rules: [
                 {
-                    test: /\.js[x]$/
+                    test: /\.(jsx|js)$/
                     , exclude: /(node_modules|bower_components)/
                     , use: [
                         {
                             loader: 'babel-loader'
                             , options: {
-                                presets: ['@babel/preset-env', '@babel/preset-react']
+                                presets: [['@babel/preset-env', { "targets": { "browsers": ["last 2 versions", "ie >= 11"] } }]
+                                , '@babel/preset-react']
                                 , plugins: [require('@babel/plugin-proposal-object-rest-spread')]
                             }
                         }
@@ -67,14 +73,16 @@ module.exports = function(env){
                         }]
                 }            
                 ,{
-                    test: /\.woff|.woff2|.ttf|.eot|.svg*.*$/
+                    test: /\.woff|.woff2|.ttf|.eot*.*$/
                     , use: [
                         {
-                        loader: "file-loader",
+                            loader: "file-loader",
+                            options: {
+                                name: 'assets/[hash]-[name].[ext]'
+                            }
                         }
                     ]
-                }
-                
+                }                
                 ,{
                     test: /\.html$/
                     , exclude: /(node_modules|bower_components)/
@@ -86,11 +94,11 @@ module.exports = function(env){
                     ]
                 }
                 ,{
-                    test: /\.(png|jp(e*)g)$/,  
+                    test: /\.(svg|gif|png|jp(e*)g)$/,  
                     use: [{
                         loader: 'url-loader',
                         options: { 
-                            limit: 16000,
+                            limit: 8000,
                             name: 'images/[hash]-[name].[ext]'
                         } 
                     }]
@@ -99,7 +107,7 @@ module.exports = function(env){
         }
         , plugins: [
             new ExtractTextPlugin({
-                filename: 'app.css'
+                filename: buildConfig.Build.OutputCss.filename
                 , allChunks: true
             })
             , new UglifyJSPlugin({
@@ -123,7 +131,14 @@ module.exports = function(env){
             canPrint: false,
         }));
     }
-    
 
+    config.plugins.push(new HtmlWebpackPlugin(buildConfig.Build.PugPlugin));
+    
+    config.plugins.push(new HtmlWebpackPugPlugin());
+
+    config.plugins.push(new webpack.DefinePlugin({
+        'NODE_ENV': process.env.NODE_ENV
+    }));
+    
     return config;
 };

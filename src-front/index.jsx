@@ -1,5 +1,5 @@
-import 'modules/bootstrap/dist/css/bootstrap.css'
-import 'modules/font-awesome/css/font-awesome.min.css'
+import '$modules/bootstrap/dist/css/bootstrap.css'
+import '$modules/font-awesome/css/font-awesome.min.css'
 import './sass/main'
 
 import React from 'react'

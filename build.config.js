@@ -1,6 +1,7 @@
 const jsonfile = require('jsonfile');
 const easter = require('./gulp/rg-gulp-easter');
 const log = easter.MessageHelper;
+const path = require('path');
 
 class BuildConfig {
 
@@ -35,15 +36,31 @@ class BuildConfig {
                 include: []
             },
             NodePort: process.env.PORT ? parseInt(process.env.PORT) : 4000,
-            EntryPoint: ['./src-front/index.jsx']
+            EntryPoint: {
+                poly: '@babel/polyfill'
+                , index: './src-front/index.jsx'            
+            }
         }
+
         this.Build = {
             root_path: './build'
             , start_script: './build/RoyalGorillaApp.js'
             , Mode:  this.IsDevelopment() ? this.Modes[0] : this.Modes[3]
             , Output: {
-                path: __dirname + '/build/public'
-                , filename: './app.js'
+                path: path.join(__dirname, '/build/public')
+                , filename: '[hash]-[name].js'
+            }
+            , OutputCss: {
+                filename: '[hash]-[name].css'
+                , allChunks: true
+            }
+            , PugPlugin: {
+                template: path.join(__dirname, '/src-server/views/layout.pug')
+                , filename: '../views/layout.pug'
+                , mobile: true
+            }
+            , AliasesResolvers: {
+                "$modules": path.join(__dirname, '/node_modules')
             }
         }
         this.DevServer = {
@@ -57,7 +74,9 @@ class BuildConfig {
         if(this.IsDevelopment()) {
             this.Server.EntryPoint = ['react-hot-loader/patch', 'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000&reload=true&quiet=true', './src-front/index.jsx'];
 
-            this.Build.Output.publicPath = `http://${this.Host}:${this.DevServer.BrowserSyncPort}/`
+            this.Build.Output.publicPath = `http://${this.Host}:${this.DevServer.BrowserSyncPort}/`;
+        } else {
+            this.Build.Output.publicPath = '';
         }
     }
 
