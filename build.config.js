@@ -1,7 +1,6 @@
 const jsonfile = require('jsonfile');
 const easter = require('./gulp/rg-gulp-easter');
 const log = easter.MessageHelper;
-const path = require('path');
 
 class BuildConfig {
 
@@ -27,57 +26,29 @@ class BuildConfig {
                 log.title('\\m/');
             }
             log.title(`Mode NODE_ENV: ${this.NodeEnv}`);
-        }
-       
+        }       
         
         this.Server = {
             Typescript: {
-                tsconfig: './tsconfig.json',
+                tsconfig: './src-server/tsconfig.json',
                 include: []
             },
-            NodePort: process.env.PORT ? parseInt(process.env.PORT) : 4000,
-            EntryPoint: {
-                poly: '@babel/polyfill'
-                , index: './src-front/index.jsx'            
-            }
+            NodePort: process.env.PORT ? parseInt(process.env.PORT) : 3000
         }
+        this.Server.Typescript.include = jsonfile.readFileSync(this.Server.Typescript.tsconfig).include;
 
         this.Build = {
             root_path: './build'
             , start_script: './build/RoyalGorillaApp.js'
             , Mode:  this.IsDevelopment() ? this.Modes[0] : this.Modes[3]
-            , Output: {
-                path: path.join(__dirname, '/build/public')
-                , filename: '[hash]-[name].js'
-            }
-            , OutputCss: {
-                filename: '[hash]-[name].css'
-                , allChunks: true
-            }
-            , PugPlugin: {
-                template: path.join(__dirname, '/src-server/views/layout.pug')
-                , filename: '../views/layout.pug'
-                , mobile: true
-            }
-            , AliasesResolvers: {
-                "$modules": path.join(__dirname, '/node_modules')
-            }
         }
+
         this.DevServer = {
             NodeWatch: ['./build/*.js','./build/**/*.js'],
-            NodeAttachDebug: process.env.DEV_ATTACH && process.env.DEV_ATTACH=="true" ? true : false,
-            BrowserSyncPort: process.env.DEV_PORT ? parseInt(process.env.DEV_PORT) : 8080,
+            NodeAttachDebug: process.env.DEV_ATTACH && process.env.DEV_ATTACH=="true" ? true : false
         }
 
-        this.Server.Typescript.include = jsonfile.readFileSync(this.Server.Typescript.tsconfig).include;
-
-        if(this.IsDevelopment()) {
-            this.Server.EntryPoint = ['react-hot-loader/patch', 'webpack-hot-middleware/client?path=/__webpack_hmr&timeout=20000&reload=true&quiet=true', './src-front/index.jsx'];
-
-            this.Build.Output.publicPath = `http://${this.Host}:${this.DevServer.BrowserSyncPort}/`;
-        } else {
-            this.Build.Output.publicPath = '';
-        }
+        
     }
 
     EnviromentIs(compareTo) {

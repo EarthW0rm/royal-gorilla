@@ -1,25 +1,23 @@
-const buildConfigClass = require('./build.config');
-let buildConfig  = null;
-let webpackConfig = null;
+const buildConfigClass = require('./build.config')
+    , gulp = require('gulp')
+    , rename = require('gulp-rename')
+    , path = require("path")
+    , ts = require("gulp-typescript")
+    , nodemon = require('nodemon')
+    , easter = require('./gulp/rg-gulp-easter')
+    , log = easter.MessageHelper
+    , sourcemaps = require('gulp-sourcemaps')
+    , del = require('del')
+    , mocha = require('gulp-mocha')
+    , webpack = require("webpack")
+    , webpackConfig = require('./src-front/webpack.config')
+    , webpackDevServer = require('webpack-dev-server');
 
-const gulp = require('gulp');
-const rename = require('gulp-rename');
-const path = require("path");
-const ts = require("gulp-typescript");
-const tsProject = ts.createProject("./tsconfig.json");
-const pm2 = require('pm2');
-const nodemon = require('gulp-nodemon');
-const easter = require('./gulp/rg-gulp-easter');
-const log = easter.MessageHelper;
-const sourcemaps = require('gulp-sourcemaps');
-const del = require('del');
-const gutil = require("gulp-util");
+require('dotenv').load();
 
-const webpack = require("webpack");
-const webpackDevMiddleware = require('webpack-dev-middleware');
-const webpackHotMiddleware = require('webpack-hot-middleware');
-
-const browserSync = require('browser-sync').create();
+let tsProject = null;
+let hasWatch = false;
+let isTestTask = false;
 
 gulp.task('copy-config', (done) => {
     gulp.src([`config/env/${process.env.NODE_ENV}.env`])
@@ -28,10 +26,8 @@ gulp.task('copy-config', (done) => {
         .on('end', () => { 
             done();
             buildConfig = buildConfigClass.GetInstance();
-            webpackConfig = require('./webpack.config')();
         });
 });
-
 
 gulp.task('clean-build', (done) => {
     del([buildConfigClass.GetInstance().Build.root_path], {force:true}).then(paths => {
@@ -39,17 +35,13 @@ gulp.task('clean-build', (done) => {
     });
 });
 
-gulp.task('copy-views', (done) => {
-    gulp.src([`src-server/views/**/*.pug`])
-        .pipe(gulp.dest(`${buildConfigClass.GetInstance().Build.root_path}/views`))
-        .on('end', () => { 
-            done();
-        });
-});
-
 gulp.task('typescript-compile', (done) => {
+    if(!tsProject){
+        tsProject = ts.createProject(buildConfigClass.GetInstance().Server.Typescript.tsconfig);
+    }
+
     let tsBuild = tsProject.src();
-    if(buildConfigClass.GetInstance().EnviromentNotIs('production')){
+    if(buildConfigClass.GetInstance().EnviromentNotIs('production')) {
         tsBuild = tsBuild.pipe(sourcemaps.init());
     }
     tsBuild = tsBuild.pipe(tsProject());
@@ -61,115 +53,96 @@ gulp.task('typescript-compile', (done) => {
         tsBuild = tsBuild.pipe(sourcemaps.write( '.' ));
     }
     tsBuild = tsBuild.pipe(gulp.dest(buildConfigClass.GetInstance().Build.root_path));
-    if(buildConfigClass.GetInstance().IsDevelopment()) {
-        gulp.watch(buildConfigClass.GetInstance().Server.Typescript.include, gulp.series('typescript-compile'));
+    if(buildConfigClass.GetInstance().IsDevelopment() && !isTestTask) {
+        if(!hasWatch){
+            gulp.watch(buildConfigClass.GetInstance().Server.Typescript.include, gulp.series('typescript-compile'));
+            hasWatch = true;
+        }
     }
     tsBuild.on('end', () => { 
         done();
     });
 });
 
-gulp.task('server-pm2', (done) => {
-    if(buildConfigClass.GetInstance().IsProduction()) {
-        pm2.connect(function(err) {
-            if (err) {
-              console.error(err);
-              process.exit(2);
-            }
-            
-            pm2.start({
-                name : 'royal-gorilla',
-                script: buildConfigClass.GetInstance().Build.start_script
-            }, function(err, apps) {
-                log.title('PM2 Started');
-                done();
-                process.exit(0);
-            });
-        });
+gulp.task('server-developer', (done) => {
+    
+    var nodemonOptions = { 
+        nodemon: require('nodemon'),
+        script: buildConfigClass.GetInstance().Build.start_script,
+        watch: false
     }
-    else {
-        var nodemonOptions = { 
-            nodemon: require('nodemon'),
-            script: buildConfigClass.GetInstance().Build.start_script,
-            watch: false
-        }
 
-        if(buildConfigClass.GetInstance().IsDevelopment()) {
-            easter.Rule();
-            nodemonOptions.watch = buildConfigClass.GetInstance().DevServer.NodeWatch;
-            if(buildConfigClass.GetInstance().DevServer.NodeAttachDebug) {
-                nodemonOptions.exec = 'node --inspect-brk';
-            }
+    if(buildConfigClass.GetInstance().IsDevelopment()) {
+        easter.Rule();
+        nodemonOptions.watch = buildConfigClass.GetInstance().DevServer.NodeWatch;
+        if(buildConfigClass.GetInstance().DevServer.NodeAttachDebug) {
+            nodemonOptions.exec = 'node --inspect-brk';
         }
-
-        var stream = nodemon(nodemonOptions);
- 
-        stream
-            .on('start', () => {
-                log.title('NODEMON Started');
-                done();
-            })
-            .on('restart', function () {
-                log.warn('NODEMON Restarted'); 
-                if(buildConfigClass.GetInstance().IsDevelopment()) {
-                    browserSync.reload();
-                }
-            })
-            .on('crash', function() {
-                log.error('Application has crashed!\n');
-                stream.emit('restart', 3);
-            })
-            .on('exit',() => {
-                log.lightInfo('NODEMON Exited!');
-            });
     }
+
+    var stream = nodemon(nodemonOptions);
+
+    stream
+        .on('start', () => {
+            log.title('NODEMON Development Started');
+            done();
+        })
+        .on('restart', function () {
+            //log.warn('NODEMON Restarted'); 
+        })
+        .on('crash', function() {
+            log.error('Application has crashed!\n');
+            stream.emit('restart', 3);
+        })
+        .on('exit',() => {
+            log.lightInfo('NODEMON Exited!');
+        });    
 });
 
+gulp.task('mocha-test', function (done) {
+    var testPipe = gulp.src('tests/**/*.spec.js')
+    .pipe(mocha({reporter: 'spec'}))
+    .once('end', () => {
+        done();
+    })
+    return testPipe;
+})
+
 gulp.task('webpack', function(done) {
-	webpack(webpackConfig, function(err, stats) {
+	webpack(webpackConfig(), function(err, stats) {
         if(err) throw err;
-        gutil.log("[webpack]", stats.toString());
+        console.log("[webpack]", stats.toString());
         done();
 	});
 });
 
 gulp.task('webpack-dev-server', function(done) {
-    var bundler = webpack(webpackConfig);
-    var browserSyncConfig = {
-        port: webpackConfig.devServer.port,
-        proxy: webpackConfig.devServer.proxy,
-    };
+    
+    var devConfig = webpackConfig();
+    devConfig.devtool = 'eval';
 
-    browserSyncConfig.proxy.middleware = [
-        webpackDevMiddleware(bundler, {
-          publicPath: webpackConfig.output.publicPath,
-          stats: { colors: true },
-          hot: true
-        }),
-        webpackHotMiddleware(bundler, { publicPath: webpackConfig.output.publicPath, hot: true })
-    ];
-
-    browserSync.init(browserSyncConfig);
+    // Start a webpack-dev-server
+    new webpackDevServer(webpack(devConfig), devConfig.devServer).listen(process.env.DEV_PORT, buildConfigClass.GetInstance().Host, function(err) {
+        if(err) throw err;
+        console.log('[webpack-dev-server]', `http://${buildConfigClass.GetInstance().Host}:${process.env.DEV_PORT}`);
+    })
 });
 
-gulp.task('pre-build', gulp.series('copy-config', 'clean-build', 'copy-views'), (done) => {
-    log.warn('Task completed: pre-build');
+gulp.task('pre-build', gulp.series('copy-config', 'clean-build'));
+
+gulp.task('build', gulp.series('pre-build', 'typescript-compile', 'webpack'));
+
+gulp.task('test', gulp.series((done) => {
+    isTestTask = true;
     done();
-});
+},'build', 'mocha-test'));
 
-gulp.task('build', gulp.series('pre-build', gulp.parallel('webpack', 'typescript-compile')), (done) => {
-    log.warn('Task completed: build');
-    done();
-});
+gulp.task('developer', gulp.series('build', (done) => {
+    if(hasWatch){
+        log.warn('As alteracoes nos arquivos .ts serao automaticamente compiladas. CTRL+C para finalizar.');
+        done();
+    }
+}, 'server-developer', 'webpack-dev-server'));
 
-gulp.task('server', gulp.series('build', gulp.parallel('server-pm2')),  (done) => {
-    log.warn('Task completed: server');
-    done();
-});
+gulp.task('default', gulp.series('build'));
 
-gulp.task('super', gulp.series('build', gulp.parallel('server-pm2', 'webpack-dev-server')),  (done) => {
-    log.warn('Task completed: super-dev-server');
-    done();
-});
-
-gulp.task('default', gulp.series('super'));

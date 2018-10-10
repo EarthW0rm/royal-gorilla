@@ -1,14 +1,11 @@
-import React from 'react'
-import Routes from './routes'
-import Menu from '../template/menu'
+import Loader from './components/controls/loader';
+import React from 'react';
+import Routes from './routes';
 
 
-
-export default props => (
+export default (props) => (
     <div>
-        <Menu />
-        <div className="container">
-            <Routes/>
-        </div>
+        <Loader />
+        <Routes />
     </div>
-)
+);

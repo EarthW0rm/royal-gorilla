@@ -1,0 +1,18 @@
+$background-green: #30b07f;
+$background-orange: #f6921e;
+$background-black: #343a40;
+$background-gray: #f8f9fa;
+
+$darken-factor: 8;
+$lighten-factor: 16;
+
+$text-color-white: white;
+$text-color-black: #212529;
+$text-color-orange: $background-orange;
+
+$base-witdth-percent: 70%;
+$font-family: 'Raleway', sans-serif;
+
+%button-radius {
+    border-radius: 30px;
+}

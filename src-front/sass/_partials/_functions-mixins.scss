@@ -1,0 +1,47 @@
+
+@function empty($value) {
+    @if not $value 
+        or $value == "" 
+        or $value == 0
+        or $value == ()
+        or length($value) == 0 {
+      @return true;
+    }
+    @return false;
+}
+
+@function flip($value) {
+    @if $value == left {
+      @return right;
+    } @else if ($value == right){
+        @return left;
+    } @else if ($value == bottom){
+        @return top;
+    } @else if ($value == top){
+        @return bottom;
+    }
+    @return false;
+}
+
+@mixin text-button($_class-name, $_background-color, $_text-color, $_float) {
+    @extend %button-radius;
+    border: none;
+    background-color: $_background-color;
+    color: $_text-color;
+    transition: all .5s;
+    cursor: pointer;
+    @if(not empty($_float)){
+        float: $_float;
+        margin-#{flip($_float)}: 10px;
+    }
+
+    &:hover {
+        background-color: darken($_background-color, $darken-factor);
+        color: $_text-color;
+    }
+
+    &.disabled {
+        background-color: lighten($_background-color, $lighten-factor);
+        color: lighten($_text-color, $lighten-factor);
+    }
+}

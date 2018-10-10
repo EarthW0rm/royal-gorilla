@@ -1,0 +1,70 @@
+$buttons: (
+    btn-confirm: (
+        pback: $background-orange, 
+        ptext: $text-color-white,
+        pfloat: right),
+    btn-reset: (
+        pback: $background-gray, 
+        ptext: $text-color-black,
+        pfloat: left),
+    btn-negative: (
+        pback: $background-black, 
+        ptext: $text-color-white,
+        pfloat: ''),
+    btn-positive: (
+        pback: $background-green, 
+        ptext: $text-color-white,
+        pfloat: '')
+);
+
+body {
+
+    .modal-dialog, 
+    .landing-notary {
+
+        @each $key, $props in $buttons{
+
+            .#{$key} {
+                min-width: 75px;
+                $back: map-get($props, pback);
+                $text: map-get($props, ptext);
+                $float: map-get($props, pfloat);
+
+                @include text-button($key, $back, $text, $float);
+            }
+        }
+
+        .btn-enviar-documentos {
+            padding: 10px 23px;
+            background-color: $background-green;
+            border-radius: 50px;
+            color: #fff;
+            margin-left: 20px;
+            margin-right: 20px;
+            display: inline-block;
+            font-weight: 600;
+            transition: all .5s;
+            cursor: pointer;
+
+            &:hover{
+                background-color: darken($background-green, $darken-factor);
+            }
+
+            .icon-download {
+                margin-right: 10px;
+                width: 30px;
+                margin-top: -3px;
+            }
+            
+            & a {
+                color: $text-color-white;
+                
+                &:hover{
+                    color: $text-color-white;
+                    text-decoration: none;
+                }
+            }
+        }
+
+    }
+}

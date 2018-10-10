@@ -1,10 +1,10 @@
-﻿
-import { RoyalG } from "../common/RoyalG";
-import path = require('path');
+﻿import { RoyalG } from '../common/RoyalG';
+import * as path from 'path';
 
-export default (() => {
+export default (async () => {
     const routerInit = new RoyalG.Routing.RoyalRouterInitializer();
     const routesDirectoryPath = path.join(__dirname);
-    routerInit.RouteRegisterFolder(routesDirectoryPath);
+    await routerInit.RouteRegisterFolder(routesDirectoryPath);
+
     return  routerInit.Router;
 })();
