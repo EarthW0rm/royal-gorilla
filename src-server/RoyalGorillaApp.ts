@@ -24,7 +24,6 @@ royalGorillaApp.use(jsend.middleware);
 royalGorillaApp.set('port', RG_API_PORT);
 royalGorillaApp.set('env', RG_NODE_ENV);
 
-// route setup.
 routesInitializer.then(routesIncialized => {
     royalGorillaApp.use('/', routesIncialized);
     royalGorillaApp.use(ErrorHandler.Handle_404);

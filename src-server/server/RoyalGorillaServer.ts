@@ -6,4 +6,5 @@ export default (_RoyalGorillaApp: core.Express) => {
     });
 
     return RoyalGorillaServer;
+
 };

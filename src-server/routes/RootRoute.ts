@@ -16,7 +16,7 @@ export default class RootRoute extends RoyalG.Routing.RoyalRouter {
     }
 
     public getHomePage(req: express.Request, res: express.Response, next: core.NextFunction) {
-        res.jsend.success({ title: 'Say hello to my little friend!', page: "RootRoute" });
+        res.jsend.success({ title: 'Say hello to my little friend!', page: 'RootRoute' });
     }
 
 }
