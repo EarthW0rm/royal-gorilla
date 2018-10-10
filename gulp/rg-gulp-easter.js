@@ -1,38 +1,36 @@
 const centerString = (text, numberOfSpaces) => {
-    var l = text.length;
-    var w2 = Math.floor(numberOfSpaces / 2);
-    var l2 = Math.floor(l / 2);
-    var s = new Array(w2 - l2 + 1).join(" ");
-    text = s + text + s;
-    if (text.length < numberOfSpaces)
-    {
-        text += new Array(numberOfSpaces - text.length + 1).join(" ");
-    }
-    if(text.length - 1 == numberOfSpaces)
-        text = text.substr(0, numberOfSpaces);
     return text;
 };
+
+const logCenter = (text) => {
+    console.log(centerString(text, process.stdout.columns));
+}
 
 const logWithColor = (text, color, bg) => {
     color = color || color.yellow;
     bg = bg || color.bgGreen
 
-    console.log(bg(color(centerString(text, 84))));
+    console.log(bg(color(centerString(text, process.stdout.columns))));
 }
-module.exports.Rule = () => {}
+module.exports.Rule = () => { }
 
-
-module.exports.Logo = () => { }
+module.exports.Logo = () => {
+    logWithColor('***************************', color.bgBlack, color.yellowBright);
+    logWithColor('****                   ****', color.bgBlack, color.yellowBright);
+    logWithColor('****   ROYAL GORILLA   ****', color.bgBlack, color.yellowBright);
+    logWithColor('****                   ****', color.bgBlack, color.yellowBright);
+    logWithColor('***************************', color.bgBlack, color.yellowBright);
+}
 
 module.exports.ShowMessage = logWithColor;
 
 const color = require('ansi-colors');
 module.exports.MessageHelper = {
     title: (txt) => {
-        logWithColor(txt, color.yellow, color.bgGreen);
+        logWithColor(txt, color.black, color.bgGreen);
     },
     warn: (txt) => {
-        logWithColor(color.symbols.warning + " " + txt, color.black, color.bgYellow);
+        logWithColor(color.symbols.warning + " " + txt, color.yellow, color.bgBlack);
     },
     lightInfo: (txt) => {
         logWithColor(txt, color.gray, color.bgBlack);
