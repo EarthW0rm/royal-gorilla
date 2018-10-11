@@ -9,6 +9,7 @@ class Loader extends React.Component {
         return (
             <Modal centered={true} isOpen={this.props.showLoading == true} className="loader-modal">
                 <ModalBody>
+                    <div className="lds-ring"><div></div><div></div><div></div><div></div></div>
                     <div className="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
                 </ModalBody>
             </Modal>

@@ -3,6 +3,9 @@ const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const HtmlWebPackPlugin = require("html-webpack-plugin");
 const path = require('path');
 const buildConfigClass = require('../build.config');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
+const { SourceMapDevToolPlugin, NamedModulesPlugin } = require('webpack');
 require('dotenv').load();
 
 module.exports = function(env) {
@@ -18,7 +21,7 @@ module.exports = function(env) {
         return output;
     } 
 
-    return {
+    const webpackConfig = {
         entry: {
             poly: '@babel/polyfill', 
             layout: './src-front/layout.jsx',
@@ -120,12 +123,27 @@ module.exports = function(env) {
                 filename: '[name].app.css'
                 , allChunks: true
             })
-            //, new FaviconsWebpackPlugin('favicon.png')
+            , new FaviconsWebpackPlugin('./src-front/favicon.png')
             , new HtmlWebPackPlugin({
                 template: "./src-front/index.html",
-                favicon: './src-front/favicon.ico',
                 filename: "index.html"
+            })
+            , new SourceMapDevToolPlugin({
+                "filename": "[file].map[query]",
+                "moduleFilenameTemplate": "[resource-path]",
+                "fallbackModuleFilenameTemplate": "[resource-path]?[hash]",
+                "sourceRoot": "webpack:///"
             })
         ]
     }
+
+    if (!buildConfig.IsDevelopment()) {
+        webpackConfig.plugins.push(new UglifyJSPlugin({
+            test: /\.js($|\?)/i
+            , sourceMap: buildConfig.IsDevelopment()
+            , extractComments: true
+        }))
+    }
+
+    return webpackConfig;
 };
